@@ -23,7 +23,7 @@ contract MtGoxNFT is ERC721Enumerable, Ownable {
 	}
 
 	function _baseURI() internal pure override returns (string memory) {
-		return "https://token.mtgoxnft.net/info/";
+		return "https://data.mtgoxnft.net/by-id/";
 	}
 
 	// issue will issue a NFT based on a given message
@@ -47,22 +47,22 @@ contract MtGoxNFT is ERC721Enumerable, Ownable {
 		return ECDSA.toEthSignedMessageHash(abi.encode(name(), uint8(0), nftId, recipient, fiatWeight, satoshiWeight, regDate));
 	}
 
-	function tokenFiatWeight(uint256 tokenId) public view returns (uint64) {
-		require(_exists(tokenId), "MtGoxNFT: weight query for nonexistent token");
+	function fiatWeight(uint256 nftId) public view returns (uint64) {
+		require(_exists(nftId), "MtGoxNFT: weight query for nonexistent NFT");
 
-		return _meta[tokenId]._fiatWeight;
+		return _meta[nftId]._fiatWeight;
 	}
 
-	function tokenSatoshiWeight(uint256 tokenId) public view returns (uint64) {
-		require(_exists(tokenId), "MtGoxNFT: weight query for nonexistent token");
+	function satoshiWeight(uint256 nftId) public view returns (uint64) {
+		require(_exists(nftId), "MtGoxNFT: weight query for nonexistent NFT");
 
-		return _meta[tokenId]._satoshiWeight;
+		return _meta[nftId]._satoshiWeight;
 	}
 
-	function tokenRegistrationDate(uint256 tokenId) public view returns (uint32) {
-		require(_exists(tokenId), "MtGoxNFT: registration datequery for nonexistent token");
+	function registrationDate(uint256 nftId) public view returns (uint32) {
+		require(_exists(nftId), "MtGoxNFT: registration datequery for nonexistent NFT");
 
-		return _meta[tokenId]._registrationDate;
+		return _meta[nftId]._registrationDate;
 	}
 
 	function grantIssuer(address account) public onlyOwner {
