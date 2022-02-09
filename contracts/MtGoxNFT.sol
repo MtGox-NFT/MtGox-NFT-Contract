@@ -44,7 +44,7 @@ contract MtGoxNFT is ERC721Enumerable, Ownable {
 	function computeSignature(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate) public view returns (bytes32) {
 		// The signature contains the following elements:
 		// name() "MtGoxNFT", NULL, tokenId, recipient(address), fiatWeight, satoshiWeight
-		return ECDSA.toEthSignedMessageHash(abi.encode(name(), uint8(0), address(this), tokenId, recipient, paramFiatWeight, paramSatoshiWeight, paramRegDate));
+		return ECDSA.toEthSignedMessageHash(abi.encode(name(), uint8(0), block.chainid, address(this), tokenId, recipient, paramFiatWeight, paramSatoshiWeight, paramRegDate));
 	}
 
 	function fiatWeight(uint256 tokenId) public view returns (uint64) {
