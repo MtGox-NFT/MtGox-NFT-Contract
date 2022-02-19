@@ -4,7 +4,7 @@
   "description": "MtGox NFT contract",
   "main": "index.js",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.4.2",
+    "@openzeppelin/contracts": "^4.5.0",
     "truffle": "^5.4.30"
   },
   "devDependencies": {},

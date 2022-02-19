@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/governance/utils/Votes.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -8,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 // The MtGoxNFT contract is based on the ERC-721 standard with some extra features such as NFT weight
 
-contract MtGoxNFT is ERC721Enumerable, Ownable {
+contract MtGoxNFT is ERC721Enumerable, Votes, Ownable {
 	mapping(address => bool) _issuers;
 
 	// meta-data stored for each NFT
@@ -19,7 +20,7 @@ contract MtGoxNFT is ERC721Enumerable, Ownable {
 	}
 	mapping(uint256 => MetaInfo) private _meta;
 
-	constructor() ERC721("MtGoxNFT", "MGN") {
+	constructor() ERC721("MtGoxNFT", "MGN") EIP712("MtGoxNFT", "1") {
 	}
 
 	function _baseURI() internal pure override returns (string memory) {
@@ -72,5 +73,17 @@ contract MtGoxNFT is ERC721Enumerable, Ownable {
 	function revokeIssuer(address account) public onlyOwner {
 		delete _issuers[account];
 	}
-}
 
+	// for votes
+	function _afterTokenTransfer(
+		address from,
+		address to,
+		uint256
+	) internal virtual override {
+		_transferVotingUnits(from, to, 1);
+	}
+
+	function _getVotingUnits(address account) internal virtual override returns (uint256) {
+		return balanceOf(account);
+	}
+}
