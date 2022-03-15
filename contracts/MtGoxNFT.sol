@@ -4,6 +4,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/governance/utils/Votes.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
@@ -25,6 +26,41 @@ contract MtGoxNFT is ERC721Enumerable, Votes, Ownable {
 
 	function _baseURI() internal pure override returns (string memory) {
 		return "https://data.mtgoxnft.net/by-id/";
+	}
+
+	function contractURI() public pure returns (string memory) {
+		return "https://data.mtgoxnft.net/contract-meta.json";
+	}
+
+	function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+		// string(abi.encodePacked(...)) means concat strings
+		// Strings.toString() returns an int value
+		// Strings.toHexString() returns a hex string starting with 0x
+		// see: https://docs.opensea.io/docs/metadata-standards
+
+		string memory tokenIdStr = Strings.toString(_tokenId);
+
+		return string(abi.encodePacked(
+			// name
+			"data:application/json,{%22name%22:%22MtGox NFT user #",
+			tokenIdStr,
+			// external_url
+			"%22,%22external_url%22:%22https://data.mtgoxnft.net/by-id/",
+			tokenIdStr,
+			// image
+			"%22,%22image%22:%22https://data.mtgoxnft.net/by-id/",
+			tokenIdStr,
+			".png",
+			// attributes → Registered (date)
+			"%22,%22attributes%22:[%22display_type%22:%22date%22,%22trait_type%22:%22Registered%22,%22value%22:",
+			Strings.toString(_meta[_tokenId].registrationDate),
+			// attributes → Fiat
+			",%22trait_type%22:%22Fiat%22,%22value%22:",
+			Strings.toString(_meta[_tokenId].fiatWeight),
+			",%22trait_type%22:%22Bitcoin%22,%22value%22:",
+			Strings.toString(_meta[_tokenId].satoshiWeight),
+			"]}"
+		));
 	}
 
 	// issue will issue a NFT based on a given message
