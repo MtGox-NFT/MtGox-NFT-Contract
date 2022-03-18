@@ -18,6 +18,7 @@ contract MtGoxNFT is ERC721Enumerable, Votes, Ownable {
 		uint64 fiatWeight;
 		uint64 satoshiWeight;
 		uint32 registrationDate;
+		uint256 tradeVolume;
 	}
 	mapping(uint256 => MetaInfo) private _meta;
 
@@ -64,9 +65,9 @@ contract MtGoxNFT is ERC721Enumerable, Votes, Ownable {
 	}
 
 	// issue will issue a NFT based on a given message
-	function issue(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate, bytes memory signature) public {
+	function issue(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate, uint256 paramTradeVolume, bytes memory signature) public {
 		// first, check the signature using computeSignature
-		(address recovered, ECDSA.RecoverError error) = ECDSA.tryRecover(computeSignature(tokenId, recipient, paramFiatWeight, paramSatoshiWeight, paramRegDate), signature);
+		(address recovered, ECDSA.RecoverError error) = ECDSA.tryRecover(computeSignature(tokenId, recipient, paramFiatWeight, paramSatoshiWeight, paramRegDate, paramTradeVolume), signature);
 		require(error == ECDSA.RecoverError.NoError && _issuers[recovered]);
 
 		// success
@@ -74,14 +75,15 @@ contract MtGoxNFT is ERC721Enumerable, Votes, Ownable {
 		_meta[tokenId] = MetaInfo({
 			fiatWeight: paramFiatWeight,
 			satoshiWeight: paramSatoshiWeight,
-			registrationDate: paramRegDate
+			registrationDate: paramRegDate,
+			tradeVolume: paramTradeVolume
 		});
 	}
 
-	function computeSignature(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate) public view returns (bytes32) {
+	function computeSignature(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate, uint256 paramTradeVolume) public view returns (bytes32) {
 		// The signature contains the following elements:
 		// name() "MtGoxNFT", NULL, tokenId, recipient(address), fiatWeight, satoshiWeight
-		return ECDSA.toEthSignedMessageHash(abi.encode(name(), uint8(0), block.chainid, address(this), tokenId, recipient, paramFiatWeight, paramSatoshiWeight, paramRegDate));
+		return ECDSA.toEthSignedMessageHash(abi.encode(name(), uint8(0), block.chainid, address(this), tokenId, recipient, paramFiatWeight, paramSatoshiWeight, paramRegDate, paramTradeVolume));
 	}
 
 	function fiatWeight(uint256 tokenId) public view returns (uint64) {
@@ -97,9 +99,15 @@ contract MtGoxNFT is ERC721Enumerable, Votes, Ownable {
 	}
 
 	function registrationDate(uint256 tokenId) public view returns (uint32) {
-		require(_exists(tokenId), "MtGoxNFT: registration datequery for nonexistent NFT");
+		require(_exists(tokenId), "MtGoxNFT: registration date query for nonexistent NFT");
 
 		return _meta[tokenId].registrationDate;
+	}
+
+	function tradeVolume(uint256 tokenId) public view returns (uint256) {
+		require(_exists(tokenId), "MtGoxNFT: trade volume query for nonexistent NFT");
+
+		return _meta[tokenId].tradeVolume;
 	}
 
 	function grantIssuer(address account) public onlyOwner {
