@@ -41,6 +41,8 @@ contract MtGoxNFT is ERC721Enumerable, Votes, Ownable {
 
 		string memory tokenIdStr = Strings.toString(_tokenId);
 
+		// TODO keep this as data uri or just point to a static file? Seems json takes a lot of room in the contract code
+
 		return string(abi.encodePacked(
 			// name
 			"data:application/json,{%22name%22:%22MtGox NFT user #",
@@ -67,12 +69,25 @@ contract MtGoxNFT is ERC721Enumerable, Votes, Ownable {
 	}
 
 	// issue will issue a NFT based on a given message
-	function issue(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate, uint256 paramTradeVolume, bytes memory signature) public {
+	function issue(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate, uint256 paramTradeVolume, bytes memory signature) external {
 		// first, check the signature using computeSignature
 		(address recovered, ECDSA.RecoverError error) = ECDSA.tryRecover(computeSignature(tokenId, recipient, paramFiatWeight, paramSatoshiWeight, paramRegDate, paramTradeVolume), signature);
-		require(error == ECDSA.RecoverError.NoError && _issuers[recovered]);
+		require(error == ECDSA.RecoverError.NoError && _issuers[recovered], "MtGoxNFT: Bad signature");
 
 		// success
+		_mint(recipient, tokenId); // _mint will fail if this NFT was already issued
+		_meta[tokenId] = MetaInfo({
+			fiatWeight: paramFiatWeight,
+			satoshiWeight: paramSatoshiWeight,
+			registrationDate: paramRegDate,
+			tradeVolume: paramTradeVolume
+		});
+	}
+
+	// issue NFT as issuer directly (not through sign)
+	function directIssue(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate, uint256 paramTradeVolume) external {
+		require(_issuers[_msgSender()], "MtGoxNFT: method only available to issuers");
+
 		_mint(recipient, tokenId); // _mint will fail if this NFT was already issued
 		_meta[tokenId] = MetaInfo({
 			fiatWeight: paramFiatWeight,
