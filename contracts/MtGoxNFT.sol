@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/governance/utils/Votes.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -68,39 +67,17 @@ contract MtGoxNFT is ERC721Enumerable, Votes, Ownable {
 		));
 	}
 
-	// issue will issue a NFT based on a given message
-	function issue(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate, uint256 paramTradeVolume, bytes memory signature) external {
-		// first, check the signature using computeSignature
-		(address recovered, ECDSA.RecoverError error) = ECDSA.tryRecover(computeSignature(tokenId, recipient, paramFiatWeight, paramSatoshiWeight, paramRegDate, paramTradeVolume), signature);
-		require(error == ECDSA.RecoverError.NoError && _issuers[recovered], "MtGoxNFT: Bad signature");
-
-		// success
-		_mint(recipient, tokenId); // _mint will fail if this NFT was already issued
-		_meta[tokenId] = MetaInfo({
-			fiatWeight: paramFiatWeight,
-			satoshiWeight: paramSatoshiWeight,
-			registrationDate: paramRegDate,
-			tradeVolume: paramTradeVolume
-		});
-	}
-
-	// issue NFT as issuer directly (not through sign)
-	function directIssue(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate, uint256 paramTradeVolume) external {
+	// mint NFT as issuer directly (not through sign)
+	function mint(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate, uint256 paramTradeVolume) external {
 		require(_issuers[_msgSender()], "MtGoxNFT: method only available to issuers");
 
-		_mint(recipient, tokenId); // _mint will fail if this NFT was already issued
 		_meta[tokenId] = MetaInfo({
 			fiatWeight: paramFiatWeight,
 			satoshiWeight: paramSatoshiWeight,
 			registrationDate: paramRegDate,
 			tradeVolume: paramTradeVolume
 		});
-	}
-
-	function computeSignature(uint256 tokenId, address recipient, uint64 paramFiatWeight, uint64 paramSatoshiWeight, uint32 paramRegDate, uint256 paramTradeVolume) public view returns (bytes32) {
-		// The signature contains the following elements:
-		// name() "MtGoxNFT", NULL, tokenId, recipient(address), fiatWeight, satoshiWeight
-		return ECDSA.toEthSignedMessageHash(abi.encode(name(), uint8(0), block.chainid, address(this), tokenId, recipient, paramFiatWeight, paramSatoshiWeight, paramRegDate, paramTradeVolume));
+		_mint(recipient, tokenId); // _mint will fail if this NFT was already issued
 	}
 
 	function fiatWeight(uint256 tokenId) public view returns (uint64) {
