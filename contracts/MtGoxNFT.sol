@@ -66,7 +66,7 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
 			Strings.toString(_meta[_tokenId].satoshiWeight),
 			"},{%22trait_type%22:%22Trade Volume%22,%22value%22:",
 			Strings.toString(_meta[_tokenId].tradeVolume),
-			"]}"
+			"}]}"
 		));
 	}
 
