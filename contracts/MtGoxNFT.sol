@@ -44,12 +44,21 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
 			tokenUrl = string(abi.encodePacked("https://data.mtgoxnft.net/by-id/", tokenIdStr, ".png"));
 		}
 
+		string memory tokenName;
+		if (_tokenId > 0xffffffff) {
+			// if anonymous token, do not show the token id
+			tokenName = "Anonymous MtGox NFT";
+		} else {
+			// show the token id (= MtGox account ID)
+			tokenName = string(abi.encodePacked("MtGox NFT %23", tokenIdStr));
+		}
+
 		// TODO keep this as data uri or just point to a static file? Seems json takes a lot of room in the contract code
 
 		return string(abi.encodePacked(
 			// name
-			"data:application/json,{%22name%22:%22MtGox NFT %23",
-			tokenIdStr,
+			"data:application/json,{%22name%22:%22",
+			tokenName,
 			// external_url
 			"%22,%22external_url%22:%22https://data.mtgoxnft.net/by-id/",
 			tokenIdStr,
