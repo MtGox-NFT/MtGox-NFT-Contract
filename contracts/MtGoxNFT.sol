@@ -22,6 +22,10 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
 	}
 	mapping(uint256 => MetaInfo) private _meta;
 
+	uint256 public totalFiatWeight;
+	uint256 public totalSatoshiWeight;
+	uint256 public totalTradeVolume;
+
 	constructor() ERC721("MtGoxNFT", "MGN") EIP712("MtGoxNFT", "1") {}
 
 	function contractURI() public pure returns (string memory) {
@@ -75,6 +79,10 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
 			tradeVolume: paramTradeVolume,
 			url: url
 		});
+		totalFiatWeight = totalFiatWeight + paramFiatWeight;
+		totalSatoshiWeight = totalSatoshiWeight + paramSatoshiWeight;
+		totalTradeVolume = totalTradeVolume + paramTradeVolume;
+
 		_safeMint(recipient, tokenId); // _mint will fail if this NFT was already issued
 	}
 
