@@ -48,7 +48,7 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
 
 		return string(abi.encodePacked(
 			// name
-			"data:application/json,{%22name%22:%22MtGox NFT user #",
+			"data:application/json,{%22name%22:%22MtGox NFT %23",
 			tokenIdStr,
 			// external_url
 			"%22,%22external_url%22:%22https://data.mtgoxnft.net/by-id/",
@@ -57,14 +57,14 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
 			"%22,%22image%22:%22",
 			tokenUrl,
 			// attributes → Registered (date)
-			"%22,%22attributes%22:[%22display_type%22:%22date%22,%22trait_type%22:%22Registered%22,%22value%22:",
+			"%22,%22attributes%22:[{%22display_type%22:%22date%22,%22trait_type%22:%22Registered%22,%22value%22:",
 			Strings.toString(_meta[_tokenId].registrationDate),
 			// attributes → Fiat
-			",%22trait_type%22:%22Fiat%22,%22value%22:",
+			"},{%22trait_type%22:%22Fiat%22,%22value%22:",
 			Strings.toString(_meta[_tokenId].fiatWeight),
-			",%22trait_type%22:%22Bitcoin%22,%22value%22:",
+			"},{%22trait_type%22:%22Bitcoin%22,%22value%22:",
 			Strings.toString(_meta[_tokenId].satoshiWeight),
-			",%22trait_type%22:%22Trade Volume%22,%22value%22:",
+			"},{%22trait_type%22:%22Trade Volume%22,%22value%22:",
 			Strings.toString(_meta[_tokenId].tradeVolume),
 			"]}"
 		));
