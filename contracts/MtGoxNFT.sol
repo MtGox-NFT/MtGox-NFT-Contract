@@ -83,6 +83,8 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
 		require(_exists(tokenId), "MtGoxNFT: setUrl for nonexistent NFT");
 		require(bytes(_meta[tokenId].url).length == 0, "MtGoxNFT: cannot set an URL twice");
 
+		// should we emit an event for the updated url?
+
 		_meta[tokenId].url = url;
 	}
 
