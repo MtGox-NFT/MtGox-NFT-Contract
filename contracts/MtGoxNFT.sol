@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
-import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/draft-ERC721Votes.sol";
+import "./MtGoxNFTmetaLinkInterface.sol";
 
 // The MtGoxNFT contract is based on the ERC-721 standard with some extra features such as NFT weight
 
-contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
+contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtGoxInfoApi {
 	mapping(address => bool) _issuers;
 
 	// meta-data stored for each NFT
@@ -26,57 +26,29 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
 	uint256 public totalSatoshiWeight;
 	uint256 public totalTradeVolume;
 
+	MtGoxNFTmetaLinkInterface private _linkInterface;
+
 	constructor() ERC721("MtGoxNFT", "MGN") EIP712("MtGoxNFT", "1") {}
 
 	function contractURI() public pure returns (string memory) {
 		return "https://data.mtgoxnft.net/contract-meta.json";
 	}
 
+	function _baseURI() internal pure override returns (string memory) {
+		// this is just a fallback
+		return "https://data.mtgoxnft.net/token-uri/";
+	}
+
 	function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-		// string(abi.encodePacked(...)) means concat strings
-		// Strings.toString() returns an int value
-		// Strings.toHexString() returns a hex string starting with 0x
-		// see: https://docs.opensea.io/docs/metadata-standards
-
-		string memory tokenIdStr = Strings.toString(_tokenId);
-		string memory tokenUrl = _meta[_tokenId].url;
-		if (bytes(tokenUrl).length == 0) {
-			tokenUrl = string(abi.encodePacked("https://data.mtgoxnft.net/by-id/", tokenIdStr, ".png"));
+		if (address(_linkInterface) != address(0)) {
+			return _linkInterface.tokenURI(this, _tokenId);
 		}
 
-		string memory tokenName;
-		if (_tokenId > 0xffffffff) {
-			// if anonymous token, do not show the token id
-			tokenName = "Anonymous MtGox NFT";
-		} else {
-			// show the token id (= MtGox account ID)
-			tokenName = string(abi.encodePacked("MtGox NFT %23", tokenIdStr));
-		}
+		return super.tokenURI(_tokenId);
+	}
 
-		// TODO keep this as data uri or just point to a static file? Seems json takes a lot of room in the contract code
-
-		return string(abi.encodePacked(
-			// name
-			"data:application/json,{%22name%22:%22",
-			tokenName,
-			// external_url
-			"%22,%22external_url%22:%22https://data.mtgoxnft.net/by-id/",
-			tokenIdStr,
-			// image
-			"%22,%22image%22:%22",
-			tokenUrl,
-			// attributes → Registered (date)
-			"%22,%22attributes%22:[{%22display_type%22:%22date%22,%22trait_type%22:%22Registered%22,%22value%22:",
-			Strings.toString(_meta[_tokenId].registrationDate),
-			// attributes → Fiat
-			"},{%22trait_type%22:%22Fiat%22,%22value%22:",
-			Strings.toString(_meta[_tokenId].fiatWeight),
-			"},{%22trait_type%22:%22Bitcoin%22,%22value%22:",
-			Strings.toString(_meta[_tokenId].satoshiWeight),
-			"},{%22trait_type%22:%22Trade Volume%22,%22value%22:",
-			Strings.toString(_meta[_tokenId].tradeVolume),
-			"}]}"
-		));
+	function setLinkInterface(MtGoxNFTmetaLinkInterface _intf) external onlyIssuer {
+		_linkInterface = _intf;
 	}
 
 	// mint NFT as issuer directly (not through sign)
@@ -96,6 +68,7 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
 	}
 
 	// set url for a given token
+	// this sets the final url for a token, when the image is stored to IPFS
 	function setUrl(uint256 tokenId, string memory url) external onlyIssuer {
 		require(_exists(tokenId), "MtGoxNFT: setUrl for nonexistent NFT");
 		require(bytes(_meta[tokenId].url).length == 0, "MtGoxNFT: cannot set an URL twice");
@@ -103,6 +76,12 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
 		// should we emit an event for the updated url?
 
 		_meta[tokenId].url = url;
+	}
+
+	function getUrl(uint256 tokenId) external view returns (string memory) {
+		require(_exists(tokenId), "MtGoxNFT: weight query for nonexistent NFT");
+
+		return _meta[tokenId].url;
 	}
 
 	function fiatWeight(uint256 tokenId) external view returns (uint64) {
@@ -135,6 +114,10 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes {
 
 	function revokeIssuer(address account) external onlyOwner {
 		delete _issuers[account];
+	}
+
+	function revokeIssuerSelf() external onlyIssuer {
+		delete _issuers[_msgSender()];
 	}
 
 	modifier onlyIssuer {
