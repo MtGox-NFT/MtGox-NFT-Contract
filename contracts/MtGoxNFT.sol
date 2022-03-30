@@ -37,17 +37,12 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 		return "https://data.mtgoxnft.net/contract-meta.json";
 	}
 
-	function _baseURI() internal pure override returns (string memory) {
-		// this is just a fallback
-		return "https://data.mtgoxnft.net/token-uri/";
-	}
-
 	function tokenURI(uint256 _tokenId) public view override returns (string memory) {
 		if (address(_linkInterface) != address(0)) {
 			return _linkInterface.tokenURI(this, _tokenId);
 		}
 
-		return super.tokenURI(_tokenId);
+		return "";
 	}
 
 	function setLinkInterface(MtGoxNFTmetaLinkInterface _intf) external onlyIssuer {
