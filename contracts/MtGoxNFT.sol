@@ -27,6 +27,9 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 	uint256 public totalTradeVolume;
 
 	MtGoxNFTmetaLinkInterface private _linkInterface;
+	bool private _linkInterfaceLocked;
+
+	event LinkInterfaceChanged(MtGoxNFTmetaLinkInterface newInterface);
 
 	constructor() ERC721("MtGoxNFT", "MGN") EIP712("MtGoxNFT", "1") {}
 
@@ -48,7 +51,13 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 	}
 
 	function setLinkInterface(MtGoxNFTmetaLinkInterface _intf) external onlyIssuer {
+		require(!_linkInterfaceLocked, "MtGoxNFT: cannot change interface (locked)");
 		_linkInterface = _intf;
+		emit LinkInterfaceChanged(_intf);
+	}
+
+	function lockLinkInterface() external onlyIssuer {
+		_linkInterfaceLocked = true;
 	}
 
 	// mint NFT as issuer directly (not through sign)
