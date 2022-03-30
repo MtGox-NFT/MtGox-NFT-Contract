@@ -11,6 +11,10 @@ contract MtGoxNFTmetaLink is Ownable, MtGoxNFTmetaLinkInterface {
 	constructor() {
 	}
 
+	function contractURI(MtGoxInfoApi) external pure returns (string memory) {
+		return "https://data.mtgoxnft.net/contract-meta.json";
+	}
+
 	function tokenURI(MtGoxInfoApi _contract, uint256 _tokenId) external view returns (string memory) {
 		// string(abi.encodePacked(...)) means concat strings
 		// Strings.toString() returns an int value

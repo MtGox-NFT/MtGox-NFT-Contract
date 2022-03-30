@@ -22,6 +22,7 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 	}
 	mapping(uint256 => MetaInfo) private _meta;
 
+	// total values for in circulation NFTs
 	uint256 public totalFiatWeight;
 	uint256 public totalSatoshiWeight;
 	uint256 public totalTradeVolume;
@@ -30,11 +31,19 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 	bool private _linkInterfaceLocked;
 
 	event LinkInterfaceChanged(MtGoxNFTmetaLinkInterface newInterface);
+	event IssuerGranted(address indexed issuer);
+	event IssuerRevoked(address indexed issuer);
+
+	// *** CODE
 
 	constructor() ERC721("MtGoxNFT", "MGN") EIP712("MtGoxNFT", "1") {}
 
-	function contractURI() public pure returns (string memory) {
-		return "https://data.mtgoxnft.net/contract-meta.json";
+	function contractURI() public view returns (string memory) {
+		if (address(_linkInterface) != address(0)) {
+			return _linkInterface.contractURI(this);
+		}
+
+		return "";
 	}
 
 	function tokenURI(uint256 _tokenId) public view override returns (string memory) {
@@ -45,13 +54,16 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 		return "";
 	}
 
-	function setLinkInterface(MtGoxNFTmetaLinkInterface _intf) external onlyIssuer {
+	// method to update the link interface if it has not been locked
+	function setLinkInterface(MtGoxNFTmetaLinkInterface _intf) external onlyOwner {
 		require(!_linkInterfaceLocked, "MtGoxNFT: cannot change interface (locked)");
 		_linkInterface = _intf;
 		emit LinkInterfaceChanged(_intf);
 	}
 
-	function lockLinkInterface() external onlyIssuer {
+	// method to lock the link interface
+	function lockLinkInterface() external onlyOwner {
+		require(!_linkInterfaceLocked, "MtGoxNFT: link interface already locked");
 		_linkInterfaceLocked = true;
 	}
 
@@ -71,7 +83,7 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 		_safeMint(recipient, tokenId); // _mint will fail if this NFT was already issued
 	}
 
-	// set url for a given token
+	// store url for a given token
 	// this sets the final url for a token, when the image is stored to IPFS
 	function setUrl(uint256 tokenId, string memory url) external onlyIssuer {
 		require(_exists(tokenId), "MtGoxNFT: setUrl for nonexistent NFT");
@@ -112,16 +124,20 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 		return _meta[tokenId].tradeVolume;
 	}
 
+	// issuer management
 	function grantIssuer(address account) external onlyOwner {
 		_issuers[account] = true;
+		emit IssuerGranted(account);
 	}
 
 	function revokeIssuer(address account) external onlyOwner {
 		delete _issuers[account];
+		emit IssuerRevoked(account);
 	}
 
 	function revokeIssuerSelf() external onlyIssuer {
 		delete _issuers[_msgSender()];
+		emit IssuerRevoked(_msgSender());
 	}
 
 	modifier onlyIssuer {

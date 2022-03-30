@@ -11,4 +11,5 @@ interface MtGoxInfoApi {
 
 interface MtGoxNFTmetaLinkInterface {
 	function tokenURI(MtGoxInfoApi, uint256) external view returns (string memory);
+	function contractURI(MtGoxInfoApi) external view returns (string memory);
 }
