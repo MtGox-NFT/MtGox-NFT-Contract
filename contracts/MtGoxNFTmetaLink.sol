@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "./MtGoxNFT.sol";
 import "./MtGoxNFTmetaLinkInterface.sol";
 
-// The MtGoxNFT contract is based on the ERC-721 standard with some extra features such as NFT weight
+// the MtGox NFT metalink contract only handles generation of URIs for contractURI and tokenURI.
 
 contract MtGoxNFTmetaLink is Ownable, MtGoxNFTmetaLinkInterface {
 	constructor() {

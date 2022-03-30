@@ -38,6 +38,7 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 
 	constructor() ERC721("MtGoxNFT", "MGN") EIP712("MtGoxNFT", "1") {}
 
+	// return value from link interface
 	function contractURI() public view returns (string memory) {
 		if (address(_linkInterface) != address(0)) {
 			return _linkInterface.contractURI(this);
@@ -46,6 +47,7 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 		return "";
 	}
 
+	// return value from link interface
 	function tokenURI(uint256 _tokenId) public view override returns (string memory) {
 		if (address(_linkInterface) != address(0)) {
 			return _linkInterface.tokenURI(this, _tokenId);
@@ -94,6 +96,7 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 		_meta[tokenId].url = url;
 	}
 
+	// return stored url for a given token
 	function getUrl(uint256 tokenId) external view returns (string memory) {
 		require(_exists(tokenId), "MtGoxNFT: weight query for nonexistent NFT");
 
@@ -135,6 +138,7 @@ contract MtGoxNFT is ERC721, ERC721Enumerable, Ownable, EIP712, ERC721Votes, MtG
 		emit IssuerRevoked(account);
 	}
 
+	// allow a issuer to revoke itself
 	function revokeIssuerSelf() external onlyIssuer {
 		delete _issuers[_msgSender()];
 		emit IssuerRevoked(_msgSender());
