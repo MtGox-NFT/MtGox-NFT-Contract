@@ -26,8 +26,8 @@ contract MtGoxNFTmetaLink is Ownable, MtGoxNFTmetaLinkInterface {
 		string memory tokenUrl = _contract.getUrl(_tokenId);
 		// TODO uncomment once we have token images
 		if (bytes(tokenUrl).length == 0) {
-			//tokenUrl = string(abi.encodePacked("https://data.mtgoxnft.net/by-id/", tokenIdStr, ".png"));
-			tokenUrl = "https://data.mtgoxnft.net/notavailableyet.svg";
+			tokenUrl = string(abi.encodePacked("https://data.mtgoxnft.net/image/v20220613/", tokenIdStr, ".svg"));
+			//tokenUrl = "https://data.mtgoxnft.net/notavailableyet.svg";
 		}
 
 		string memory tokenName;
